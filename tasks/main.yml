@@ -1,0 +1,54 @@
+- action: setup
+  tags: elasticsearch
+
+- name: Install ES
+  yum: name=https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-{{ es_version }}.noarch.rpm state=present
+  notify: restart elasticsearch
+  tags: elasticsearch
+
+- name: Create plugins folder
+  file: path=/usr/share/elasticsearch/plugins state=directory
+  tags: elasticsearch
+
+- name: Register installed plugins
+  shell: ls /usr/share/elasticsearch/plugins/
+  changed_when: false
+  register: installed_plugins
+  tags: elasticsearch
+
+- name: Ensure 'which' is installed
+  yum: name=which state=present
+  tags: elasticsearch
+
+- name: Install plugins
+  shell: /usr/share/elasticsearch/bin/plugin -install {{ item.repo }}
+  notify: restart elasticsearch
+  with_items: es_plugins
+  when: "'{{ item.name }}' not in installed_plugins.stdout_lines"
+  tags: elasticsearch
+
+- name: Configure ES startup settings
+  template: src=elasticsearch.j2 dest=/etc/sysconfig/elasticsearch
+  notify: restart elasticsearch
+  tags: elasticsearch
+  
+- name: increase socket max queue size
+  sysctl: name="vm.max_map_count" value={{ es_vm_max_map_count }} state=present reload=yes
+  when: is_docker_container is not defined or is_docker_container|bool == false
+  notify: restart elasticsearch
+  tags: elasticsearch
+
+- name: Configure ES service
+  template: src=elasticsearch.yml.j2 dest=/etc/elasticsearch/elasticsearch.yml
+  notify: restart elasticsearch
+  tags: elasticsearch
+
+- name: Start ES service
+  service: name=elasticsearch state=started enabled=yes
+  when: es_daemon is not defined or es_daemon|bool == true
+  tags: elasticsearch
+  
+- name: Stop ES service
+  service: name=elasticsearch state=stopped enabled=no
+  when: es_daemon is defined and es_daemon|bool == false
+  tags: elasticsearch

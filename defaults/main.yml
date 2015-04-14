@@ -1,0 +1,43 @@
+es_version: 1.4.4
+
+#Half server memory, the rest is used for FS cache
+es_heap_size: "{{ (ansible_memtotal_mb / 2)|round(0, 'ceil')|int~'m' }}"
+
+es_max_open_files: 65535
+es_vm_max_map_count: 262144
+es_max_locked_memory: "unlimited"
+es_node_master: "true"
+es_node_data: "true"
+es_index_number_of_shards: 1
+es_index_number_of_replicas: 0
+es_bootstrap_mlockall: true
+es_network_bind_host: 0.0.0.0
+es_network_publish_host: "{{ (ansible_eth1 | default(ansible_lo)).ipv4.address }}"
+
+#After how many data and master eligible nodes within the cluster recovery will start
+es_gateway_recover_after_nodes: 1
+
+#How many data and master eligible nodes are expected to be in the cluster
+es_gateway_expected_nodes: 1
+
+es_gateway_recover_after_time: 5m
+
+#A node has to see that number of master eligible nodes to be operational. Set to N/2+1 on cluster where N>2
+es_discovery_zen_minimum_master_nodes: 1
+
+es_discovery_zen_ping_multicast_enabled: "false"
+es_discovery_zen_ping_unicast_hosts: none
+es_transport_tcp_port: 9300
+es_http_port: 9200
+es_network_tcp_keep_alive: "false"
+es_cluster_name: none
+es_script_disable_dynamic: shared
+
+es_plugins:
+  - name: head
+    repo: mobz/elasticsearch-head
+  - name: analysis-icu
+    repo: elasticsearch/elasticsearch-analysis-icu/2.4.2
+
+#Set to 1 for spining disk, use default for SSD drives
+#es_merge_scheduler_max_thread_count: 1
