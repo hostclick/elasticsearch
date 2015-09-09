@@ -1,6 +1,3 @@
-- action: setup
-  tags: elasticsearch
-
 - name: Install ES
   yum: name=https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-{{ es_version }}.noarch.rpm state=present
   notify: restart elasticsearch
